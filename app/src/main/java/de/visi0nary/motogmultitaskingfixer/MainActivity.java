@@ -12,6 +12,7 @@ import android.widget.Switch;
 public class MainActivity extends Activity {
 
     private boolean onStartup;
+    private boolean applyReasonableMinfrees;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,7 +22,7 @@ public class MainActivity extends Activity {
 
         // get settings storage reference
         final SharedPreferences settings = getSharedPreferences(getPackageName() + "_preferences", MODE_PRIVATE);
-        // get current setting
+        // get current setting for the "on start up" switch
         onStartup = settings.getBoolean(getResources().getString(R.string.text_apply_on_boot), false);
         // get switch reference
         Switch startup = (Switch) findViewById(R.id.switch_onStartup);
@@ -31,10 +32,28 @@ public class MainActivity extends Activity {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if(isChecked) {
-                    settings.edit().putBoolean(getResources().getString(R.string.text_apply_on_boot), true).commit();
+                    settings.edit().putBoolean(getResources().getString(R.string.text_apply_on_boot), true).apply();
                 }
                 else {
-                    settings.edit().putBoolean(getResources().getString(R.string.text_apply_on_boot), false).commit();
+                    settings.edit().putBoolean(getResources().getString(R.string.text_apply_on_boot), false).apply();
+                }
+            }
+        });
+
+        // get settings for "reasonable minfree values" switch
+        applyReasonableMinfrees = settings.getBoolean(getResources().getString(R.string.text_minfree_values), false);
+        // get switch reference
+        Switch reasonableValues = (Switch) findViewById(R.id.switch_minfree_values);
+        reasonableValues.setChecked(applyReasonableMinfrees);
+        // register a new listener that writes a button click in the settings storage
+        reasonableValues.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if(isChecked) {
+                    settings.edit().putBoolean(getResources().getString(R.string.text_minfree_values), true).apply();
+                }
+                else {
+                    settings.edit().putBoolean(getResources().getString(R.string.text_minfree_values), false).apply();
                 }
             }
         });
