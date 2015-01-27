@@ -9,5 +9,6 @@
     <string name="text_header">ohai!</string>
     <string name="text_apply_on_boot">Apply on boot!</string>
     <string name="text_homepage">visi0nary.de</string>
+    <string name="text_minfree_values">Apply reasonable minfree values!</string>
 
 </resources>
