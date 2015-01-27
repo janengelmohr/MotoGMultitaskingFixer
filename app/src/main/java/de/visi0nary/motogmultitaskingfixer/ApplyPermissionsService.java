@@ -2,9 +2,7 @@ package de.visi0nary.motogmultitaskingfixer;
 
 import android.app.Service;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.IBinder;
-import android.widget.Switch;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
@@ -45,9 +43,11 @@ public class ApplyPermissionsService extends Service {
                 // check for the exit value (0 if it was a root process, 255 if not)
                 returnValue = testSU.exitValue();
             } catch (Exception e) {
+                Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
             }
         }
         catch (Exception e) {
+            Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
         }
         return(returnValue==0);
     }
@@ -90,7 +90,6 @@ public class ApplyPermissionsService extends Service {
                 try {
                     Process suProcess = Runtime.getRuntime().exec("su");
                     DataOutputStream os = new DataOutputStream(suProcess.getOutputStream());
-                    DataInputStream is = new DataInputStream(suProcess.getInputStream());
 
                     os.writeBytes("chmod 660 /sys/module/lowmemorykiller/parameters/adj\n");
                     os.writeBytes("chmod 660 /sys/module/lowmemorykiller/parameters/minfree\n");
