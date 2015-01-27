@@ -43,9 +43,9 @@
         android:enabled="true"
         android:clickable="true"
         android:width="300dp"
-        android:layout_centerVertical="true"
-        android:layout_centerHorizontal="true"
-        android:onClick="onButtonClick" />
+        android:onClick="onButtonClick"
+        android:layout_above="@+id/switch_onStartup"
+        android:layout_centerHorizontal="true" />
 
     <Switch
         android:layout_width="wrap_content"
@@ -53,9 +53,8 @@
         android:text="@string/text_apply_on_boot"
         android:id="@+id/switch_onStartup"
         android:checked="false"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="42dp" />
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -76,8 +75,19 @@
         android:text="@string/text_minfree_values"
         android:id="@+id/switch_minfree_values"
         android:checked="false"
-        android:layout_marginBottom="40dp"
-        android:layout_above="@+id/switch_onStartup"
-        android:layout_centerHorizontal="true" />
+        android:layout_above="@+id/homepage"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="88dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="@string/text_explanation"
+        android:id="@+id/text_explaination"
+        android:layout_alignTop="@+id/switch_minfree_values"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="40dp" />
 
 </RelativeLayout>
