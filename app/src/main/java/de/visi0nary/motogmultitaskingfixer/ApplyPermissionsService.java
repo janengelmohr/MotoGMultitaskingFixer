@@ -34,6 +34,13 @@ public class ApplyPermissionsService extends Service {
             // if switch is checked, apply reasonable minfree values
             setReasonableMinfrees();
         }
+
+        if (checkIfPermissionsAreSetCorrect()) {
+            Toast.makeText(getApplicationContext(), "Everything went fine. Enjoy multitasking! :)", Toast.LENGTH_SHORT).show();
+        } else {
+            // should never happen, but just in case... :)
+            Toast.makeText(getApplicationContext(), "Mhm... Something went wrong. The permissions can't be altered even though we are rooted.", Toast.LENGTH_LONG).show();
+        }
         stopSelf();
     }
     // set reasonable minfrees according to RAM size
@@ -62,8 +69,6 @@ public class ApplyPermissionsService extends Service {
                 DataOutputStream testingStream = new DataOutputStream(process.getOutputStream());
                 testingStream.writeBytes("echo '2048,3072,4096,69100,77738,86375' > /sys/module/lowmemorykiller/parameters/minfree\n");
                 testingStream.flush();
-                // clean up
-                process.destroy();
             }
             catch (IOException e) {
                 e.printStackTrace();
@@ -118,8 +123,6 @@ public class ApplyPermissionsService extends Service {
             if(bufferedReader.readLine().contains("rw-rw-")) {
                 minfreePermissionSetRight = true;
             }
-            // clean up
-            suProcess.destroy();
         }
         catch (IOException e) {
             Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
@@ -138,12 +141,6 @@ public class ApplyPermissionsService extends Service {
                     os.writeBytes("chmod 660 /sys/module/lowmemorykiller/parameters/adj\n");
                     os.writeBytes("chmod 660 /sys/module/lowmemorykiller/parameters/minfree\n");
                     os.flush();
-                    if (checkIfPermissionsAreSetCorrect()) {
-                        Toast.makeText(getApplicationContext(), "Everything went fine. Enjoy multitasking! :)", Toast.LENGTH_SHORT).show();
-                    } else {
-                        // should never happen, but just in case... :)
-                        Toast.makeText(getApplicationContext(), "Mhm... Something went wrong. The permissions can't be altered even though we are rooted.", Toast.LENGTH_LONG).show();
-                    }
                 } catch (IOException e) {
                     Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
                 }
