@@ -1,7 +1,9 @@
 package de.visi0nary.motogmultitaskingfixer;
 
+import android.app.ActivityManager;
 import android.app.Service;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.IBinder;
 import android.widget.Toast;
 
@@ -17,14 +19,56 @@ public class ApplyPermissionsService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-        // TODO: Return the communication channel to the service.
         throw new UnsupportedOperationException("Not yet implemented");
     }
 
     @Override
     public void onCreate() {
         alterPermissions();
+
+        // get settings storage reference
+        final SharedPreferences settings = getSharedPreferences(getPackageName() + "_preferences", MODE_PRIVATE);
+        // get current setting
+        boolean applyMinfrees = settings.getBoolean(getResources().getString(R.string.text_minfree_values), false);
+        if(applyMinfrees) {
+            // if switch is checked, apply reasonable minfree values
+            setReasonableMinfrees();
+        }
         stopSelf();
+    }
+    // set reasonable minfrees according to RAM size
+    public void setReasonableMinfrees() {
+        // 2048,3072,4096,28342,31041,33740
+        // get devices' total RAM
+        ActivityManager activityManager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+        ActivityManager.MemoryInfo memoryInfo = new ActivityManager.MemoryInfo();
+        activityManager.getMemoryInfo(memoryInfo);
+        long totalRAM = memoryInfo.totalMem;
+        if(totalRAM<1000000000) {
+            // we have a device with less than 1GB RAM (Moto G, Razr HD, ...)
+            try {
+                Process process = Runtime.getRuntime().exec("su");
+                DataOutputStream testingStream = new DataOutputStream(process.getOutputStream());
+                testingStream.writeBytes("echo '2048,3072,4096,28342,31041,33740' > /sys/module/lowmemorykiller/parameters/minfree\n");
+                testingStream.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        else {
+            // we have a device with less than 2GB RAM (Moto X)
+            try {
+                Process process = Runtime.getRuntime().exec("su");
+                DataOutputStream testingStream = new DataOutputStream(process.getOutputStream());
+                testingStream.writeBytes("echo '2048,3072,4096,69100,77738,86375' > /sys/module/lowmemorykiller/parameters/minfree\n");
+                testingStream.flush();
+                // clean up
+                process.destroy();
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     // returns true if device is rooted and false if not
@@ -94,8 +138,6 @@ public class ApplyPermissionsService extends Service {
                     os.writeBytes("chmod 660 /sys/module/lowmemorykiller/parameters/adj\n");
                     os.writeBytes("chmod 660 /sys/module/lowmemorykiller/parameters/minfree\n");
                     os.flush();
-                    // clean up
-                    // suProcess.destroy();
                     if (checkIfPermissionsAreSetCorrect()) {
                         Toast.makeText(getApplicationContext(), "Everything went fine. Enjoy multitasking! :)", Toast.LENGTH_SHORT).show();
                     } else {
