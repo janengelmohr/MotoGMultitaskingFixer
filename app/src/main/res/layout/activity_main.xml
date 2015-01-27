@@ -65,6 +65,19 @@
         android:id="@+id/homepage"
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentStart="true"
+        android:autoLink="web"
+        android:clickable="true"
+        android:enabled="true" />
+
+    <Switch
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/text_minfree_values"
+        android:id="@+id/switch_minfree_values"
+        android:checked="false"
+        android:layout_marginBottom="40dp"
+        android:layout_above="@+id/switch_onStartup"
+        android:layout_centerHorizontal="true" />
 
 </RelativeLayout>
