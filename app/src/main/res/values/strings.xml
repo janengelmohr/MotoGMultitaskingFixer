@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Moto G Multitasking Fixer</string>
+    <string name="action_settings">Settings</string>
+    <string name="button_apply">Aww, yea!</string>
+    <string name="text_introduction">This app fixes the LMK permissions for the Moto G, Razr HD and other Moto devices running CM12. Just click the button below to apply the values and permissions :)</string>
+    <string name="text_root_note">Please note: You have to be rooted.</string>
+    <string name="text_header">ohai!</string>
+    <string name="text_apply_on_boot">Apply on boot!</string>
+    <string name="text_homepage">visi0nary.de</string>
+
+</resources>
