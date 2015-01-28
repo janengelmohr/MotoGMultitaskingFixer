@@ -51,21 +51,28 @@ public class ApplyPermissionsService extends Service {
         ActivityManager.MemoryInfo memoryInfo = new ActivityManager.MemoryInfo();
         activityManager.getMemoryInfo(memoryInfo);
         long totalRAM = memoryInfo.totalMem;
+        Process process = null;
         if(totalRAM<1000000000) {
             // we have a device with less than 1GB RAM (Moto G, Razr HD, ...)
             try {
-                Process process = Runtime.getRuntime().exec("su");
+                process = Runtime.getRuntime().exec("su");
                 DataOutputStream testingStream = new DataOutputStream(process.getOutputStream());
                 testingStream.writeBytes("echo '2048,3072,4096,28342,31041,33740' > /sys/module/lowmemorykiller/parameters/minfree\n");
                 testingStream.flush();
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            finally {
+                // clean up
+                if(process!=null) {
+                    process.destroy();
+                }
+            }
         }
         else {
             // we have a device with less than 2GB RAM (Moto X)
             try {
-                Process process = Runtime.getRuntime().exec("su");
+                process = Runtime.getRuntime().exec("su");
                 DataOutputStream testingStream = new DataOutputStream(process.getOutputStream());
                 testingStream.writeBytes("echo '2048,3072,4096,69100,77738,86375' > /sys/module/lowmemorykiller/parameters/minfree\n");
                 testingStream.flush();
@@ -73,15 +80,22 @@ public class ApplyPermissionsService extends Service {
             catch (IOException e) {
                 e.printStackTrace();
             }
+            finally {
+                // clean up
+                if(process!=null) {
+                    process.destroy();
+                }
+            }
         }
     }
 
     // returns true if device is rooted and false if not
     private boolean deviceIsRooted() {
         int returnValue = -1;
+        Process testSU = null;
         try {
             // try to create a root process
-            Process testSU = Runtime.getRuntime().exec("su");
+            testSU = Runtime.getRuntime().exec("su");
             DataOutputStream testingStream = new DataOutputStream(testSU.getOutputStream());
             // exit the process again
             testingStream.writeBytes("exit\n");
@@ -98,6 +112,12 @@ public class ApplyPermissionsService extends Service {
         catch (Exception e) {
             Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
         }
+        finally {
+            // clean up
+            if(testSU!=null) {
+                testSU.destroy();
+            }
+        }
         return(returnValue==0);
     }
 
@@ -105,8 +125,9 @@ public class ApplyPermissionsService extends Service {
     public boolean checkIfPermissionsAreSetCorrect() {
         boolean adjPermissionSetRight = false;
         boolean minfreePermissionSetRight = false;
+        Process suProcess = null;
         try {
-            Process suProcess = Runtime.getRuntime().exec("su");
+            suProcess = Runtime.getRuntime().exec("su");
             DataOutputStream os = new DataOutputStream(suProcess.getOutputStream());
             DataInputStream is = new DataInputStream(suProcess.getInputStream());
 
@@ -127,6 +148,12 @@ public class ApplyPermissionsService extends Service {
         catch (IOException e) {
             Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
         }
+        finally {
+            // clean up
+            if(suProcess!=null) {
+                suProcess.destroy();
+            }
+        }
         return(adjPermissionSetRight && minfreePermissionSetRight);
     }
 
@@ -134,8 +161,9 @@ public class ApplyPermissionsService extends Service {
     public void alterPermissions() {
             // check if device is rooted
             if (deviceIsRooted()) {
+                Process suProcess = null;
                 try {
-                    Process suProcess = Runtime.getRuntime().exec("su");
+                    suProcess = Runtime.getRuntime().exec("su");
                     DataOutputStream os = new DataOutputStream(suProcess.getOutputStream());
 
                     os.writeBytes("chmod 660 /sys/module/lowmemorykiller/parameters/adj\n");
@@ -143,6 +171,12 @@ public class ApplyPermissionsService extends Service {
                     os.flush();
                 } catch (IOException e) {
                     Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+                finally {
+                    // clean up
+                    if(suProcess!=null) {
+                        suProcess.destroy();
+                    }
                 }
             } else
                 Toast.makeText(getApplicationContext(), "Failed to acquire root access :(", Toast.LENGTH_SHORT).show();
