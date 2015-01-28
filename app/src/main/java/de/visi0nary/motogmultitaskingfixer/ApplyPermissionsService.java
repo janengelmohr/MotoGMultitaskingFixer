@@ -14,6 +14,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 public class ApplyPermissionsService extends Service {
+
+    private Process suProcess;
+    private DataOutputStream os;
+
     public ApplyPermissionsService() {
     }
 
@@ -24,23 +28,39 @@ public class ApplyPermissionsService extends Service {
 
     @Override
     public void onCreate() {
-        alterPermissions();
+        try {
+            // start an SU process
+            this.suProcess = Runtime.getRuntime().exec("su");
+            os = new DataOutputStream(suProcess.getOutputStream());
+            // check for root
+            if (deviceIsRooted()) {
+                alterPermissions();
 
-        // get settings storage reference
-        final SharedPreferences settings = getSharedPreferences(getPackageName() + "_preferences", MODE_PRIVATE);
-        // get current setting
-        boolean applyMinfrees = settings.getBoolean(getResources().getString(R.string.text_minfree_values), false);
-        if(applyMinfrees) {
-            // if switch is checked, apply reasonable minfree values
-            setReasonableMinfrees();
-        }
+                // get settings storage reference
+                final SharedPreferences settings = getSharedPreferences(getPackageName() + "_preferences", MODE_PRIVATE);
+                // get current setting
+                boolean applyMinfrees = settings.getBoolean(getResources().getString(R.string.text_minfree_values), false);
+                if (applyMinfrees) {
+                    // if switch is checked, apply reasonable minfree values
+                    setReasonableMinfrees();
+                }
 
-        if (checkIfPermissionsAreSetCorrect()) {
-            Toast.makeText(getApplicationContext(), "Everything went fine. Enjoy multitasking! :)", Toast.LENGTH_SHORT).show();
-        } else {
-            // should never happen, but just in case... :)
-            Toast.makeText(getApplicationContext(), "Mhm... Something went wrong. The permissions can't be altered even though we are rooted.", Toast.LENGTH_LONG).show();
+                if (checkIfPermissionsAreSetCorrect()) {
+                    Toast.makeText(getApplicationContext(), "Everything went fine. Enjoy multitasking! :)", Toast.LENGTH_SHORT).show();
+                } else {
+                    // should never happen, but just in case... :)
+                    Toast.makeText(getApplicationContext(), "Mhm... Something went wrong. The permissions can't be altered even though we are rooted.", Toast.LENGTH_LONG).show();
+                }
+            } else {
+                Toast.makeText(getApplicationContext(), "Couldn't acquire root. :(", Toast.LENGTH_LONG).show();
+            }
         }
+        catch (IOException e) {
+            e.printStackTrace();
+            // if an exception is thrown, the process is destroyed
+            this.suProcess.destroy();
+        }
+        this.suProcess.destroy();
         stopSelf();
     }
     // set reasonable minfrees according to RAM size
@@ -51,40 +71,23 @@ public class ApplyPermissionsService extends Service {
         ActivityManager.MemoryInfo memoryInfo = new ActivityManager.MemoryInfo();
         activityManager.getMemoryInfo(memoryInfo);
         long totalRAM = memoryInfo.totalMem;
-        Process process = null;
         if(totalRAM<1000000000) {
             // we have a device with less than 1GB RAM (Moto G, Razr HD, ...)
             try {
-                process = Runtime.getRuntime().exec("su");
-                DataOutputStream testingStream = new DataOutputStream(process.getOutputStream());
-                testingStream.writeBytes("echo '2048,3072,4096,28342,31041,33740' > /sys/module/lowmemorykiller/parameters/minfree\n");
-                testingStream.flush();
+                this.os.writeBytes("echo '2048,3072,4096,28342,31041,33740' > /sys/module/lowmemorykiller/parameters/minfree\n");
+                this.os.flush();
             } catch (IOException e) {
                 e.printStackTrace();
-            }
-            finally {
-                // clean up
-                if(process!=null) {
-                    process.destroy();
-                }
             }
         }
         else {
             // we have a device with less than 2GB RAM (Moto X)
             try {
-                process = Runtime.getRuntime().exec("su");
-                DataOutputStream testingStream = new DataOutputStream(process.getOutputStream());
-                testingStream.writeBytes("echo '2048,3072,4096,69100,77738,86375' > /sys/module/lowmemorykiller/parameters/minfree\n");
-                testingStream.flush();
+                this.os.writeBytes("echo '2048,3072,4096,69100,77738,86375' > /sys/module/lowmemorykiller/parameters/minfree\n");
+                this.os.flush();
             }
             catch (IOException e) {
                 e.printStackTrace();
-            }
-            finally {
-                // clean up
-                if(process!=null) {
-                    process.destroy();
-                }
             }
         }
     }
@@ -92,6 +95,7 @@ public class ApplyPermissionsService extends Service {
     // returns true if device is rooted and false if not
     private boolean deviceIsRooted() {
         int returnValue = -1;
+        // create temporary SU process
         Process testSU = null;
         try {
             // try to create a root process
@@ -125,10 +129,7 @@ public class ApplyPermissionsService extends Service {
     public boolean checkIfPermissionsAreSetCorrect() {
         boolean adjPermissionSetRight = false;
         boolean minfreePermissionSetRight = false;
-        Process suProcess = null;
         try {
-            suProcess = Runtime.getRuntime().exec("su");
-            DataOutputStream os = new DataOutputStream(suProcess.getOutputStream());
             DataInputStream is = new DataInputStream(suProcess.getInputStream());
 
             InputStreamReader reader = new InputStreamReader(is);
@@ -147,39 +148,23 @@ public class ApplyPermissionsService extends Service {
         }
         catch (IOException e) {
             Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
-        }
-        finally {
-            // clean up
-            if(suProcess!=null) {
-                suProcess.destroy();
-            }
+            // if an exception is thrown, clean up
+            suProcess.destroy();
         }
         return(adjPermissionSetRight && minfreePermissionSetRight);
     }
 
     // do the magic. set the "right" permissions for the two files (adj/minfree)
     public void alterPermissions() {
-            // check if device is rooted
-            if (deviceIsRooted()) {
-                Process suProcess = null;
                 try {
-                    suProcess = Runtime.getRuntime().exec("su");
-                    DataOutputStream os = new DataOutputStream(suProcess.getOutputStream());
-
                     os.writeBytes("chmod 660 /sys/module/lowmemorykiller/parameters/adj\n");
                     os.writeBytes("chmod 660 /sys/module/lowmemorykiller/parameters/minfree\n");
                     os.flush();
                 } catch (IOException e) {
                     Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+                    // if an exception is thrown, clean up
+                    suProcess.destroy();
                 }
-                finally {
-                    // clean up
-                    if(suProcess!=null) {
-                        suProcess.destroy();
-                    }
-                }
-            } else
-                Toast.makeText(getApplicationContext(), "Failed to acquire root access :(", Toast.LENGTH_SHORT).show();
 
     }
 }
