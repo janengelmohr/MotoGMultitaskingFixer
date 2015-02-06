@@ -71,7 +71,7 @@ public class ApplyPermissionsService extends Service {
         ActivityManager.MemoryInfo memoryInfo = new ActivityManager.MemoryInfo();
         activityManager.getMemoryInfo(memoryInfo);
         long totalRAM = memoryInfo.totalMem;
-        if(totalRAM<1000000000) {
+        if(totalRAM<1200000000) {
             // we have a device with less than 1GB RAM (Moto G, Razr HD, ...)
             try {
                 this.os.writeBytes("echo '2048,3072,4096,28342,31041,33740' > /sys/module/lowmemorykiller/parameters/minfree\n");
