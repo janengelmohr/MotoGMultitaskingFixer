@@ -52,15 +52,15 @@ public class ApplyPermissionsService extends Service {
                     Toast.makeText(getApplicationContext(), "Mhm... Something went wrong. The permissions can't be altered even though we are rooted.", Toast.LENGTH_LONG).show();
                 }
             } else {
-                Toast.makeText(getApplicationContext(), "Couldn't acquire root. :(", Toast.LENGTH_LONG).show();
+                Toast.makeText(getApplicationContext(), "Please allow root access!", Toast.LENGTH_LONG).show();
             }
-        }
-        catch (IOException e) {
-            e.printStackTrace();
             // if an exception is thrown, the process is destroyed
             this.suProcess.destroy();
         }
-        this.suProcess.destroy();
+        catch (IOException e) {
+            e.printStackTrace();
+            Toast.makeText(getApplicationContext(), "Your device is not rooted. :(", Toast.LENGTH_LONG).show();
+        }
         stopSelf();
     }
     // set reasonable minfrees according to RAM size
